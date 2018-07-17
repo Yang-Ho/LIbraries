@@ -1,0 +1,6 @@
+Figure 4.7: added edges vs oc
+./scatterPlotSeaborn.py ../Results/Scratch/Layered_Log_Stats.csv  1 2 4 "# Added Edges" "OC" "" --legend_pos 0 --xlog --error 7 --save_fig ../../msthesis/Chapter4/Measures/Charts/Layered/augmented_added_vs_oc.pdf 
++ a vertical line at x = 200
+
+Figure 4.8: base distribution vs dv
+./scatterPlotSeaborn.py ../Results/Scratch/Layered_32n_stats.csv 3 2 5 "# Added Edges" "dv" "" --legend_pos 0 --save_fig ../../msthesis/Chapter4/Measures/Charts/Layered/augmented_base_vs_added_dv.pdf

@@ -1,2 +1,2 @@
-# LIbraries
-Contains libraries for various things for various languages. 
+# Libraries
+Contains libraries/scripts for various things. 
