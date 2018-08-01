@@ -74,7 +74,10 @@ if __name__ == '__main__':
                     y_value = float(line[y])
                     data[group][y].append(float(line[y]))
                     if args.error:
-                        data[group]['error'][y].append(float(line[error_index[y]]))
+                        error_value = float(line[error_index[y]])
+                        if error_value > y_value:
+                            error_value = 0.999 * y_value
+                        data[group]['error'][y].append(error_value)
                     index += 1
             else:
                 header = line.split(',')
@@ -135,7 +138,7 @@ if __name__ == '__main__':
             line = None
             line, = axes[index].plot(data[group]['x'], data[group][y], **plot_params)
 
-            if args.error and group in ['32']:
+            if args.error and "LP" in header[y]:
                 _, caps, _ = axes[index].errorbar(data[group]['x'], data[group][y], yerr=data[group]['error'][y], fmt=None, capsize=5, color = plot_params['color'])
                 for cap in caps:
                     cap.set_markeredgewidth(1)
@@ -153,6 +156,8 @@ if __name__ == '__main__':
                 maxys[index] = args.y_max[0]
             else:
                 temp_max = max(data[group][y])
+                if args.error:
+                    temp_max += max(data[group]['error'][y])
                 if temp_max > maxys[index]:
                     maxys[index] = temp_max
             if len(y_labels) > 1:
@@ -175,7 +180,7 @@ if __name__ == '__main__':
             xticks = list(np.logspace(math.log(minx,10), math.log(maxx,10), num=6))
             axes[i].set_xticks(xticks)
         if args.ylog:
-            axes[i].set_yscale('log')
+            axes[i].set_yscale('log', nonposy='clip')
             yticks = list(np.logspace(math.log(minys[i],10), math.log(maxys[i],10), num=7))
             axes[i].set_yticks(yticks)
         else:
@@ -195,9 +200,9 @@ if __name__ == '__main__':
     special_ax = ax.twiny()
 
     special_ax.axhline(1, ls='--', c='grey', label='200')
-    special_ax.text(0.9, 0.80, "1.000")
-    #special_ax.set_xticks([])
-    #special_ax.set_xticklabels([])
+    special_ax.text(0.85, 0.95, "1.000")
+    special_ax.set_xticks([])
+    special_ax.set_xticklabels([])
     special_ax.get_xaxis().set_visible(False)
     special_ax.get_yaxis().set_visible(False)
 
@@ -210,8 +215,8 @@ if __name__ == '__main__':
         #labels[1], labels[2] = labels[2], labels[1]
         #lines[0], lines[1] = lines[1], lines[0]
         #labels[0], labels[1] = labels[1], labels[0]
-        lines.reverse()
-        labels.reverse()
+        #lines.reverse()
+        #labels.reverse()
         axes[0].legend(lines, labels, loc=legend_pos)
 
     if not args.fig_name:
