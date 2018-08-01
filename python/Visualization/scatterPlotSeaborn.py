@@ -213,10 +213,10 @@ if __name__ == '__main__':
         legend_pos = int(args.legend_pos[0])
         #lines[1], lines[2] = lines[2], lines[1]
         #labels[1], labels[2] = labels[2], labels[1]
-        #lines[0], lines[1] = lines[1], lines[0]
-        #labels[0], labels[1] = labels[1], labels[0]
-        #lines.reverse()
-        #labels.reverse()
+        lines[0], lines[1] = lines[1], lines[0]
+        labels[0], labels[1] = labels[1], labels[0]
+        lines.reverse()
+        labels.reverse()
         axes[0].legend(lines, labels, loc=legend_pos)
 
     if not args.fig_name:
