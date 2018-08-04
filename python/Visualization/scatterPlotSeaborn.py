@@ -162,12 +162,18 @@ if __name__ == '__main__':
                     maxys[index] = temp_max
             if len(y_labels) > 1:
                 index += 1
-        temp_min = min(data[group]['x'])
-        temp_max = max(data[group]['x'])
-        if temp_min < minx:
-            minx = temp_min
-        if temp_max > maxx:
-            maxx = temp_max
+        if args.x_max:
+            maxx = args.x_max[0]
+        else:
+            temp_max = max(data[group]['x'])
+            if temp_max > maxx:
+                maxx = temp_max
+        if args.x_min:
+            minx = args.x_min[0]
+        else:
+            temp_min = min(data[group]['x'])
+            if temp_min < minx:
+                minx = temp_min
     fig.suptitle(args.title)
 
     print("Labels:",labels)
@@ -187,6 +193,9 @@ if __name__ == '__main__':
             yticks = list(np.linspace(minys[i], maxys[i], 6))
             axes[i].set_yticks(yticks)
 
+        xticks = list(np.linspace(minx, maxx, 6))
+        axes[i].set_xticks(xticks)
+
         axes[i].get_xaxis().set_major_formatter(tick.ScalarFormatter())
         axes[i].get_xaxis().set_minor_formatter(tick.NullFormatter())
         axes[i].get_yaxis().set_major_formatter(tick.ScalarFormatter())
@@ -199,10 +208,10 @@ if __name__ == '__main__':
     # special axis: use to draw horizontal/vertical lines
     special_ax = ax.twiny()
 
-    special_ax.axhline(1, ls='--', c='grey', label='200')
-    special_ax.text(0.85, 0.95, "1.000")
-    special_ax.set_xticks([])
-    special_ax.set_xticklabels([])
+    #special_ax.axhline(1, ls='--', c='grey', label='200')
+    #special_ax.text(0.85, 0.95, "1.000")
+    #special_ax.set_xticks([])
+    #special_ax.set_xticklabels([])
     special_ax.get_xaxis().set_visible(False)
     special_ax.get_yaxis().set_visible(False)
 
