@@ -84,10 +84,10 @@ if __name__ == '__main__':
 
     skip_iter = args.skip_iter[0] 
     if len(data) == 1 and len(y_axes) > 1:
-        colors = itertools.cycle(cm.Set1(range(len(y_axes) + skip_iter)))
+        colors = itertools.cycle(cm.Dark2(range(len(y_axes) + skip_iter)))
     else:
-        colors = itertools.cycle(cm.Set1(range(len(data) * len(y_axes) + skip_iter)))
-    markers = itertools.cycle(('o', 'v', '^', '*', '<', '>', 'D', 'X', 'h', 'P'))
+        colors = itertools.cycle(cm.tab10(range(len(data) * len(y_axes) + skip_iter)))
+    markers = itertools.cycle(('o', 'v', '<', '*', 'X', 'D', 'P', '>', 'h', '^'))
 
     for i in range(skip_iter):
         next(markers)
@@ -185,6 +185,9 @@ if __name__ == '__main__':
             axes[i].set_xscale('log')
             xticks = list(np.logspace(math.log(minx,10), math.log(maxx,10), num=6))
             axes[i].set_xticks(xticks)
+        else:
+            xticks = list(np.linspace(minx, maxx, 6))
+            axes[i].set_xticks(xticks)
         if args.ylog:
             axes[i].set_yscale('log', nonposy='clip')
             yticks = list(np.logspace(math.log(minys[i],10), math.log(maxys[i],10), num=7))
@@ -193,8 +196,6 @@ if __name__ == '__main__':
             yticks = list(np.linspace(minys[i], maxys[i], 6))
             axes[i].set_yticks(yticks)
 
-        xticks = list(np.linspace(minx, maxx, 6))
-        axes[i].set_xticks(xticks)
 
         axes[i].get_xaxis().set_major_formatter(tick.ScalarFormatter())
         axes[i].get_xaxis().set_minor_formatter(tick.NullFormatter())
@@ -226,7 +227,7 @@ if __name__ == '__main__':
         labels[0], labels[1] = labels[1], labels[0]
         lines.reverse()
         labels.reverse()
-        axes[0].legend(lines, labels, loc=legend_pos)
+        axes[0].legend(lines, labels, bbox_to_anchor=(0.20,0.35), loc=legend_pos)
 
     if not args.fig_name:
         plt.show()
