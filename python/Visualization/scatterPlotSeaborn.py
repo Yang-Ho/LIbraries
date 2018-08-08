@@ -87,7 +87,7 @@ if __name__ == '__main__':
         colors = itertools.cycle(cm.Dark2(range(len(y_axes) + skip_iter)))
     else:
         colors = itertools.cycle(cm.tab10(range(len(data) * len(y_axes) + skip_iter)))
-    markers = itertools.cycle(('o', 'v', '<', '*', 'X', 'D', 'P', '>', 'h', '^'))
+    markers = itertools.cycle(('o', 'v', 'P', '*', 'X', 'D', '<', '>', 'h', '^'))
 
     for i in range(skip_iter):
         next(markers)
@@ -183,18 +183,18 @@ if __name__ == '__main__':
         axes[i].set_ylabel(y_labels[i])
         if args.xlog and i == 0:
             axes[i].set_xscale('log')
-            xticks = list(np.logspace(math.log(minx,10), math.log(maxx,10), num=6))
-            axes[i].set_xticks(xticks)
+            #xticks = list(np.logspace(math.log(minx,10), math.log(maxx,10), num=6))
+            #axes[i].set_xticks(xticks)
         else:
             xticks = list(np.linspace(minx, maxx, 6))
-            axes[i].set_xticks(xticks)
+            #axes[i].set_xticks(xticks)
         if args.ylog:
             axes[i].set_yscale('log', nonposy='clip')
-            yticks = list(np.logspace(math.log(minys[i],10), math.log(maxys[i],10), num=7))
-            axes[i].set_yticks(yticks)
+            #yticks = list(np.logspace(math.log(minys[i],10), math.log(maxys[i],10), num=7))
+            #axes[i].set_yticks(yticks)
         else:
             yticks = list(np.linspace(minys[i], maxys[i], 6))
-            axes[i].set_yticks(yticks)
+            #axes[i].set_yticks(yticks)
 
 
         axes[i].get_xaxis().set_major_formatter(tick.ScalarFormatter())
@@ -227,9 +227,11 @@ if __name__ == '__main__':
         labels[0], labels[1] = labels[1], labels[0]
         lines.reverse()
         labels.reverse()
-        axes[0].legend(lines, labels, bbox_to_anchor=(0.20,0.35), loc=legend_pos)
+        #axes[0].legend(lines, labels, bbox_to_anchor=(1,0.5), loc=legend_pos, borderaxespad=0.2)
+        axes[0].legend(lines, labels, bbox_to_anchor=(1,0.5), loc='center left', frameon=True)
 
     if not args.fig_name:
+        plt.tight_layout()
         plt.show()
     else:
         print(args.fig_name[0])
