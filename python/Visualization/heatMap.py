@@ -5,10 +5,62 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
 import matplotlib.cm as cm
+#import seaborn as sns
 import numpy as np
 import math
 
-#plt.style.use('seaborn')
+plt.style.use('seaborn')
+
+def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
+    '''
+    Function to offset the "center" of a colormap. Useful for
+    data with a negative min and positive max and you want the
+    middle of the colormap's dynamic range to be at zero.
+
+    Input
+    -----
+      cmap : The matplotlib colormap to be altered
+      start : Offset from lowest point in the colormap's range.
+          Defaults to 0.0 (no lower offset). Should be between
+          0.0 and `midpoint`.
+      midpoint : The new center of the colormap. Defaults to
+          0.5 (no shift). Should be between 0.0 and 1.0. In
+          general, this should be  1 - vmax / (vmax + abs(vmin))
+          For example if your data range from -15.0 to +5.0 and
+          you want the center of the colormap at 0.0, `midpoint`
+          should be set to  1 - 5/(5 + 15)) or 0.75
+      stop : Offset from highest point in the colormap's range.
+          Defaults to 1.0 (no upper offset). Should be between
+          `midpoint` and 1.0.
+    '''
+    cdict = {
+        'red': [],
+        'green': [],
+        'blue': [],
+        'alpha': []
+    }
+
+    # regular index to compute the colors
+    reg_index = np.linspace(start, stop, 257)
+
+    # shifted index to match the data
+    shift_index = np.hstack([
+        np.linspace(0.0, midpoint, 128, endpoint=False),
+        np.linspace(midpoint, 1.0, 129, endpoint=True)
+    ])
+
+    for ri, si in zip(reg_index, shift_index):
+        r, g, b, a = cmap(ri)
+
+        cdict['red'].append((si, r, r))
+        cdict['green'].append((si, g, g))
+        cdict['blue'].append((si, b, b))
+        cdict['alpha'].append((si, a, a))
+
+    newcmap = matplotlib.colors.LinearSegmentedColormap(name, cdict)
+    plt.register_cmap(cmap=newcmap)
+
+    return newcmap
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -50,15 +102,17 @@ if __name__ == '__main__':
         for line in input_file:
             if header:
                 line = line.split(',')
-
                 x_value = float(line[x_axis])
                 y_value = float(line[y_axis])
-                value = float(line[value_index])
+                if 'X' in line[value_index]:
+                    value = np.nan
+                else:
+                    value = float(line[value_index])
+                    if value > val_max:
+                        val_max = value
+                    if value < val_min:
+                        val_min = value
 
-                if value > val_max:
-                    val_max = value
-                if value < val_min:
-                    val_min = value
                 if x_value > xmax:
                     xmax = x_value
                 if x_value < xmin:
@@ -72,21 +126,35 @@ if __name__ == '__main__':
                 y_data.append(y_value)
                 value_data.append(value)
 
-                data.append((x_value, y_value, value))
+                data.append((y_value, x_value, value))
             else:
                 header = line.split(',')
 
-    fig = plt.figure(dpi=100)
-    ax = fig.add_subplot(111)
-    
     print("x:",header[x_axis])
     print("y:",header[y_axis].strip())
     print("value:",header[value_index].strip())
 
+    # "scatterplot"
     x = np.array(x_data)
     y = np.array(y_data)
-    #x = np.unique(x)
-    #y = np.unique(y)
+    value = np.array(value_data)
+
+    orig_cmap = matplotlib.cm.viridis_r
+    shifted_cmap = shiftedColorMap(orig_cmap, start=0.2, midpoint=0.25, name='my_shifted')
+    plt.scatter(x,y, cmap='my_shifted', c=value, s=200)
+    cbar = plt.colorbar()
+    cbar.ax.set_ylabel("Runtime ratio", rotation=270, labelpad=15)
+
+    plt.xlabel(args.x_label)
+    plt.ylabel(args.y_label)
+    plt.yscale('log')
+    plt.yticks([5, 10, 20, 40, 80, 160], [5, 10, 20, 40, 80, 160])
+
+
+    # Seaborn
+    """
+    x = np.array(x_data)
+    y = np.array(y_data)
 
     xu = np.unique(x)
     yu = np.unique(y)
@@ -99,6 +167,20 @@ if __name__ == '__main__':
 
     ary_data = np.array(data)
 
+    x_labels = ['0', '1', '5', '10']
+    y_labels = ['5', '10', '20', '40', '80', '160']
+    ax = sns.heatmap(Z, robust=True, cmap='inferno_r', square=True, xticklabels=x_labels, yticklabels=y_labels)
+    ax.invert_yaxis()
+    ax.set_xlabel(args.x_label)
+    ax.set_ylabel(args.y_label)
+    cbar.ax.set_ylabel("Runtime ratio", rotation=270, labelpad=15)
+    """
+
+    # Old
+    """
+    fig = plt.figure(dpi=100)
+    ax = fig.add_subplot(111)
+    
     #print(xmin, xmax, ymin, ymax)
     #plt.axis([xmin, xmax, ymin, ymax])
     plt.pcolor(X,Y,Z, cmap="RdYlGn_r", edgecolors="black")
@@ -114,7 +196,7 @@ if __name__ == '__main__':
     ax.set_xticklabels(x_ticks)
 
     y_ticks = ax.get_yticks().tolist()
-    temp_labels = ['0.025', '0.050', '0.100', '0.200', '0.400', '0.800']
+    temp_labels = ['5', '10', '20', '40', '80', '160']
     print(len(y_ticks), len(temp_labels))
     for i in range(len(y_ticks)):
         if i > 0 and i < len(y_ticks) - 1:
@@ -126,6 +208,7 @@ if __name__ == '__main__':
 
     cbar = plt.colorbar()
     cbar.ax.set_ylabel("Runtime ratio", rotation=270, labelpad=15)
+    """
 
     if not args.fig_name:
         plt.tight_layout()
