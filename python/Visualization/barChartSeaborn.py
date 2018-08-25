@@ -90,6 +90,9 @@ if __name__ == '__main__':
     ax.set_xlabel(args.x_label)
     ax.set_ylabel(args.y_label)
 
+    if args.ylog:
+        ax.set_yscale('log', nonposy='clip')
+
     # special axis: use to draw horizontal/vertical lines
     special_ax = ax.twiny()
 
