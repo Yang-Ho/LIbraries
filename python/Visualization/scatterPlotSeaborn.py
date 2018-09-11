@@ -138,8 +138,9 @@ if __name__ == '__main__':
             line = None
             line, = axes[index].plot(data[group]['x'], data[group][y], **plot_params)
 
-            if args.error and "LP" in header[y]:
-                _, caps, _ = axes[index].errorbar(data[group]['x'], data[group][y], yerr=data[group]['error'][y], fmt=None, capsize=5, color = plot_params['color'])
+            #if args.error and "LP" in header[y]:
+            if args.error:
+                _, caps, _ = axes[index].errorbar(data[group]['x'], data[group][y], yerr=data[group]['error'][y], fmt='', capsize=5, color = plot_params['color'])
                 for cap in caps:
                     cap.set_markeredgewidth(1)
 
@@ -223,10 +224,10 @@ if __name__ == '__main__':
         legend_pos = int(args.legend_pos[0])
         #lines[1], lines[2] = lines[2], lines[1]
         #labels[1], labels[2] = labels[2], labels[1]
-        lines[0], lines[1] = lines[1], lines[0]
-        labels[0], labels[1] = labels[1], labels[0]
-        lines.reverse()
-        labels.reverse()
+        #lines[0], lines[1] = lines[1], lines[0]
+        #labels[0], labels[1] = labels[1], labels[0]
+        #lines.reverse()
+        #labels.reverse()
         #axes[0].legend(lines, labels, bbox_to_anchor=(1,0.5), loc=legend_pos, borderaxespad=0.2)
         axes[0].legend(lines, labels, bbox_to_anchor=(1,0.5), loc='center left', frameon=True)
 
