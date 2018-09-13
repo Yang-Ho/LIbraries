@@ -77,6 +77,7 @@ def parse_arguments():
     parser.add_argument("--ylog", help="Use log scale for y-axis", action='store_true')
     parser.add_argument("--save_fig", nargs=1, dest='fig_name', help="Use log scale for y-axis")
     parser.add_argument("--legend_pos", nargs=1, dest='legend_pos', help="Postion to place the legend")
+    parser.add_argument("--group", nargs=1, dest='group', help="Which column to use to group the data")
 
     return parser.parse_args()
 
@@ -86,10 +87,15 @@ if __name__ == '__main__':
     y_axis = int(args.y_axis)
     value_index = int(args.value)
 
-    x_data = []
-    y_data = []
-    value_data = []
-    data = []
+    x_data = {}
+    y_data = {}
+    value_data = {}
+
+    if not args.group:
+        x_data = {'default' : []}
+        y_data = {'default' : []}
+        value_data = {'default' : []}
+
     val_min = 1
     val_max = 0
     ymin = 1000
@@ -105,7 +111,8 @@ if __name__ == '__main__':
                 x_value = float(line[x_axis])
                 y_value = float(line[y_axis])
                 if 'X' in line[value_index]:
-                    value = np.nan
+                    #value = np.nan
+                    value = 0
                 else:
                     value = float(line[value_index])
                     if value > val_max:
@@ -122,11 +129,19 @@ if __name__ == '__main__':
                 if y_value < ymin:
                     ymin = y_value
 
-                x_data.append(x_value)
-                y_data.append(y_value)
-                value_data.append(value)
-
-                data.append((y_value, x_value, value))
+                if args.group:
+                    group = line[int(args.group[0])]
+                    if group not in x_data:
+                        x_data[group] = []
+                        y_data[group] = []
+                        value_data[group] = []
+                    x_data[group].append(x_value)
+                    y_data[group].append(y_value)
+                    value_data[group].append(value)
+                else:
+                    x_data['default'].append(x_value)
+                    y_data['default'].append(y_value)
+                    value_data['default'].append(value)
             else:
                 header = line.split(',')
 
@@ -134,81 +149,40 @@ if __name__ == '__main__':
     print("y:",header[y_axis].strip())
     print("value:",header[value_index].strip())
 
+    markers = itertools.cycle(('o', 'v', 'P', '*', 'X', 'D', '<', '>', 'h', '^'))
+
+    lines = []
     # "scatterplot"
-    x = np.array(x_data)
-    y = np.array(y_data)
-    value = np.array(value_data)
+    for group in x_data: 
+        print(group)
+        x = np.array(x_data[group])
+        y = np.array(y_data[group])
+        value = np.array(value_data[group])
+        print(value)
 
-    orig_cmap = matplotlib.cm.viridis_r
-    shifted_cmap = shiftedColorMap(orig_cmap, start=0.2, midpoint=0.25, name='my_shifted')
-    plt.scatter(x,y, cmap='my_shifted', c=value, s=200)
-    cbar = plt.colorbar()
-    cbar.ax.set_ylabel("Runtime ratio", rotation=270, labelpad=15)
+        orig_cmap = matplotlib.cm.viridis_r
+        shifted_cmap = shiftedColorMap(orig_cmap, start=0.2, midpoint=0.25, name='my_shifted')
+        line = plt.scatter(x,y, cmap='my_shifted', c=value, s=200, marker=next(markers), label=group)
+        lines.append(line)
 
+    cbar = plt.colorbar(orientation='horizontal')
+    cbar.ax.set_xlabel("Runtime ratio", rotation=0, labelpad=15)
+
+    print(ymin, ymax)
+    yticks = [int(t) for t in list(np.logspace(math.log(ymin,10), math.log(ymax,10), num=5))]
     plt.xlabel(args.x_label)
     plt.ylabel(args.y_label)
     plt.yscale('log')
+    plt.yticks(yticks, yticks)
     plt.yticks([5, 10, 20, 40, 80, 160], [5, 10, 20, 40, 80, 160])
+    plt.ylim(2.5)
+    #plt.get_xaxis().set_major_formatter(tick.ScalarFormatter())
+    #plt.get_xaxis().set_minor_formatter(tick.NullFormatter())
 
-
-    # Seaborn
-    """
-    x = np.array(x_data)
-    y = np.array(y_data)
-
-    xu = np.unique(x)
-    yu = np.unique(y)
-    x = np.append(xu, [xu[-1]+np.diff(xu)[-1]]) - np.diff(xu)[-1]/2.
-    y = np.append(yu, [yu[-1]+np.diff(yu)[-1]]) - np.diff(yu)[-1]/2.
-    X,Y = np.meshgrid(x,y)
-
-    z = np.array(value_data)
-    Z = z.reshape(len(yu), len(xu))
-
-    ary_data = np.array(data)
-
-    x_labels = ['0', '1', '5', '10']
-    y_labels = ['5', '10', '20', '40', '80', '160']
-    ax = sns.heatmap(Z, robust=True, cmap='inferno_r', square=True, xticklabels=x_labels, yticklabels=y_labels)
-    ax.invert_yaxis()
-    ax.set_xlabel(args.x_label)
-    ax.set_ylabel(args.y_label)
-    cbar.ax.set_ylabel("Runtime ratio", rotation=270, labelpad=15)
-    """
-
-    # Old
-    """
-    fig = plt.figure(dpi=100)
-    ax = fig.add_subplot(111)
-    
-    #print(xmin, xmax, ymin, ymax)
-    #plt.axis([xmin, xmax, ymin, ymax])
-    plt.pcolor(X,Y,Z, cmap="RdYlGn_r", edgecolors="black")
-
-    ax = plt.axes()
-    x_ticks = ax.get_xticks().tolist()
-    temp_labels = ['0', '1', '5', '10']
-    for i in range(len(x_ticks)):
-        if i % 2 == 0:
-            x_ticks[i] = " "
-        else:
-            x_ticks[i] = temp_labels[int(i / 2)]
-    ax.set_xticklabels(x_ticks)
-
-    y_ticks = ax.get_yticks().tolist()
-    temp_labels = ['5', '10', '20', '40', '80', '160']
-    print(len(y_ticks), len(temp_labels))
-    for i in range(len(y_ticks)):
-        if i > 0 and i < len(y_ticks) - 1:
-            y_ticks[i] = temp_labels[i - 1]
-    ax.set_yticklabels(y_ticks)
-
-    ax.set_xlabel(args.x_label)
-    ax.set_ylabel(args.y_label)
-
-    cbar = plt.colorbar()
-    cbar.ax.set_ylabel("Runtime ratio", rotation=270, labelpad=15)
-    """
+    legend_pos = 'best'
+    if args.legend_pos:
+        legend_pos = int(args.legend_pos[0])
+        plt.legend(bbox_to_anchor=(1,0.5), loc='center left', frameon=True)
 
     if not args.fig_name:
         plt.tight_layout()
