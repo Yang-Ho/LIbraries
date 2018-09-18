@@ -198,8 +198,8 @@ if __name__ == '__main__':
             #axes[i].set_yticks(yticks)
 
 
-        axes[i].get_xaxis().set_major_formatter(tick.ScalarFormatter())
-        axes[i].get_xaxis().set_minor_formatter(tick.NullFormatter())
+        #axes[i].get_xaxis().set_major_formatter(tick.ScalarFormatter())
+        #axes[i].get_xaxis().set_minor_formatter(tick.NullFormatter())
         axes[i].get_yaxis().set_major_formatter(tick.ScalarFormatter())
         axes[i].get_yaxis().set_minor_formatter(tick.NullFormatter())
 
@@ -210,8 +210,8 @@ if __name__ == '__main__':
     # special axis: use to draw horizontal/vertical lines
     special_ax = ax.twiny()
 
-    #special_ax.axhline(1, ls='--', c='grey', label='200')
-    #special_ax.text(0.85, 0.95, "1.000")
+    special_ax.axhline(1, ls='--', c='grey', label='200')
+    special_ax.text(0.05, 0.83, "1.000")
     #special_ax.set_xticks([])
     #special_ax.set_xticklabels([])
     special_ax.get_xaxis().set_visible(False)
