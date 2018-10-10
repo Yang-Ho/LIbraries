@@ -9,6 +9,9 @@ import matplotlib.cm as cm
 import numpy as np
 import math
 
+from matplotlib import rc
+rc('text', usetex=True)
+
 plt.style.use('seaborn')
 
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
@@ -130,7 +133,7 @@ if __name__ == '__main__':
                     ymin = y_value
 
                 if args.group:
-                    group = line[int(args.group[0])]
+                    group = line[int(args.group[0])].strip()
                     if group not in x_data:
                         x_data[group] = []
                         y_data[group] = []
@@ -158,24 +161,25 @@ if __name__ == '__main__':
         x = np.array(x_data[group])
         y = np.array(y_data[group])
         value = np.array(value_data[group])
-        print(value)
 
         orig_cmap = matplotlib.cm.viridis_r
-        shifted_cmap = shiftedColorMap(orig_cmap, start=0.2, midpoint=0.25, name='my_shifted')
+        shifted_cmap = shiftedColorMap(orig_cmap, start=0.2, midpoint=0.2, name='my_shifted')
         line = plt.scatter(x,y, cmap='my_shifted', c=value, s=200, marker=next(markers), label=group)
         lines.append(line)
 
     cbar = plt.colorbar(orientation='horizontal')
-    cbar.ax.set_xlabel("Runtime ratio", rotation=0, labelpad=15)
+    cbar.ax.set_xlabel(args.value_label, rotation=0, labelpad=15)
+    #cbar.ax.set_xlim([0,1])
+    plt.clim(0,1)
 
-    print(ymin, ymax)
-    yticks = [int(t) for t in list(np.logspace(math.log(ymin,10), math.log(ymax,10), num=5))]
+
+    #yticks = [int(t) for t in list(np.logspace(math.log(ymin,10), math.log(ymax,10), num=5))]
     plt.xlabel(args.x_label)
     plt.ylabel(args.y_label)
-    plt.yscale('log')
-    plt.yticks(yticks, yticks)
-    plt.yticks([5, 10, 20, 40, 80, 160], [5, 10, 20, 40, 80, 160])
-    plt.ylim(2.5)
+    #plt.yscale('log')
+    #plt.yticks(yticks, yticks)
+    #plt.yticks([5, 10, 20, 40, 80, 160], [5, 10, 20, 40, 80, 160])
+    #plt.ylim(2.5)
     #plt.get_xaxis().set_major_formatter(tick.ScalarFormatter())
     #plt.get_xaxis().set_minor_formatter(tick.NullFormatter())
 

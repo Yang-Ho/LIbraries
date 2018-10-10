@@ -2,17 +2,12 @@
 import argparse
 import itertools
 import matplotlib
-matplotlib.rcParams.update({'errorbar.capsize': 5, 'lines.linewidth':5})
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
 import matplotlib.cm as cm
 import numpy as np
 import math
-
-from matplotlib import rc
-rc('text', usetex=True)
-
-plt.style.use('seaborn')
+import seaborn as sns
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -35,13 +30,11 @@ def parse_arguments():
     parser.add_argument("--xmin", nargs=1, dest='x_min', type=float, help="minimum of x axis")
     parser.add_argument("--xmax", nargs=1, dest='x_max', type=float, help="maximum of x axis")
     parser.add_argument("--skip_iter", nargs=1, dest='skip_iter', type=int, default=[0], help="maximum of x axis")
-    parser.add_argument("--jitter", help="Make it a jitter plot", action='store_true')
 
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = parse_arguments()
-    use_jitter = args.jitter
     group_index = int(args.group)
     x_axis = int(args.x_axis)
     y_axes = [int(y) for y in args.y_axis.split(',')]
@@ -70,6 +63,7 @@ if __name__ == '__main__':
                         data[group]['error'] = {} 
                     for y in y_axes:
                         data[group][y] = []
+                        data[group]['label'] = []
                         if args.error:
                             data[group]['error'][y] = []
 
@@ -87,11 +81,12 @@ if __name__ == '__main__':
             else:
                 header = line.split(',')
 
+    for group in data:
+        for y in y_axes:
+            data[group]['label'].append(header[y])
+
     skip_iter = args.skip_iter[0] 
-    if len(data) == 1 and len(y_axes) > 1:
-        colors = itertools.cycle(cm.Dark2(range(len(y_axes) + skip_iter)))
-    else:
-        colors = itertools.cycle(cm.tab10(range(len(data) * len(y_axes) + skip_iter)))
+    colors = itertools.cycle(('red', 'lawngreen', 'deepskyblue', 'darkorchid', 'orange', 'm'))
     markers = itertools.cycle(('o', 'v', 'P', '*', 'X', 'D', '<', '>', 'h', '^'))
 
     for i in range(skip_iter):
@@ -100,18 +95,11 @@ if __name__ == '__main__':
 
     fig = plt.figure(dpi=100)
     ax = fig.add_subplot(111)
-    axes.append(ax)
-    if len(y_labels) > 1:
-        axes.append(ax.twinx())
 
-    #ax.axhline(1, ls='--', c='grey', label='200')
-    #ax.text(0.90, 0.90, "1.000")
-
-    lines = []
     labels = []
 
-    minys = [1000 for y in axes]
-    maxys = [0 for a in axes]
+    minys = [1000 for y in data]
+    maxys = [0 for a in data]
     minx = 1000
     maxx = 0
     print("group:",header[group_index])
@@ -126,41 +114,23 @@ if __name__ == '__main__':
 
         plot_params ={}
         if not args.connect:
-            plot_params['linestyle'] = ''
+            plot_params['linestyle'] = '-'
         if len(data) > 1:
             plot_params['color'] = next(colors)
 
-        jitter_incr = 0
-        if use_jitter:
-            jitter_incr = -0.025
+        hue_index = 0
         for y in y_axes:
-            plot_params['marker'] = next(markers)
-            plot_params['markersize'] = 9 
-            if len(data) == 1:
-                plot_params['color'] = next(colors)
-            if len(data) > 1 and len(y_axes) > 1:
-                plot_params['label'] = ":".join([group.strip(), header[y].strip()])
-            elif len(y_axes) > 1:
-                plot_params['label'] = header[y].strip()
-            else:
-                plot_params['label'] = group.strip()
+            hue = [data[group]['label'][hue_index] for y in y_axes]
 
-            line = None
-            jittered_x = [x + jitter_incr for x in data[group]['x']]
-            line, = axes[index].plot(jittered_x, data[group][y], **plot_params)
-            if use_jitter:
-                jitter_incr += 0.01
-            #else:
-            #    line, = axes[index].plot(data[group]['x'], data[group][y], **plot_params)
+            hue_index += 1
 
-            #if args.error and "LP" in header[y]:
-            if args.error:
-                _, caps, _ = axes[index].errorbar(jittered_x, data[group][y], yerr=data[group]['error'][y], fmt='', capsize=5, color = plot_params['color'], linestyle='')
-                for cap in caps:
-                    cap.set_markeredgewidth(1)
+            print("X: {}\n".format(data[group]['x']))
+            print("Y: {}\n".format(data[group][y]))
+            print("H: {}\n".format(data[group]['label']))
 
-            lines.append(line)
-            labels.append(plot_params['label'])
+            color = next(colors)
+            print("color: {}".format(color))
+            sns.stripplot(data[group]['x'], data[group][y], ax=ax, jitter=True, hue=hue, color=color)
 
             if args.y_min:
                 minys[index] = args.y_min[0]
@@ -178,6 +148,7 @@ if __name__ == '__main__':
                     maxys[index] = temp_max
             if len(y_labels) > 1:
                 index += 1
+
         if args.x_max:
             maxx = args.x_max[0]
         else:
@@ -190,37 +161,14 @@ if __name__ == '__main__':
             temp_min = min(data[group]['x'])
             if temp_min < minx:
                 minx = temp_min
-    fig.suptitle(args.title)
-
-    print("Labels:",labels)
-    print("Axes:",axes)
-    for i in range(len(axes)):
-        axes[i].set_xlabel(r"{}".format(args.x_label))
-        axes[i].set_ylabel(r"{}".format(y_labels[i]))
-        if args.xlog and i == 0:
-            axes[i].set_xscale('log')
-        else:
-            xticks = list(np.linspace(minx, maxx, 6))
-        if args.ylog:
-            axes[i].set_yscale('log', nonposy='clip')
-        else:
-            yticks = list(np.linspace(minys[i], maxys[i], 6))
-
-
-        axes[i].get_yaxis().set_major_formatter(tick.ScalarFormatter())
-        axes[i].get_yaxis().set_minor_formatter(tick.NullFormatter())
-
-        if i > 0:
-            axes[i].grid(b=False)
-            axes[i].get_xaxis().set_visible(False)
 
     legend_pos = 'best'
     if args.legend_pos:
         legend_pos = int(args.legend_pos[0])
-        axes[0].legend(lines, labels, bbox_to_anchor=(1,0.5), loc='center left', frameon=True)
+        ax.legend(handles=ax.lines, labels=labels, bbox_to_anchor=(1,0.5), loc='center left', frameon=True)
 
     if not args.fig_name:
-        plt.tight_layout()
+        #plt.tight_layout()
         plt.show()
     else:
         print(args.fig_name[0])
