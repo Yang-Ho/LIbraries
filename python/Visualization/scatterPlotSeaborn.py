@@ -104,8 +104,8 @@ if __name__ == '__main__':
     if len(y_labels) > 1:
         axes.append(ax.twinx())
 
-    #ax.axhline(1, ls='--', c='grey', label='200')
-    #ax.text(0.90, 0.90, "1.000")
+    ax.axhline(1, ls='--', c='grey', label='200')
+    ax.text(0.90, 0.93, "1.000")
 
     lines = []
     labels = []
@@ -121,6 +121,9 @@ if __name__ == '__main__':
     for e in error_index:
         print("e:",header[error_index[e]])
     print(data)
+    jitter_incr = 0
+    if use_jitter:
+        jitter_incr = -0.02
     for group in data:
         index = 0
 
@@ -130,9 +133,6 @@ if __name__ == '__main__':
         if len(data) > 1:
             plot_params['color'] = next(colors)
 
-        jitter_incr = 0
-        if use_jitter:
-            jitter_incr = -0.025
         for y in y_axes:
             plot_params['marker'] = next(markers)
             plot_params['markersize'] = 9 
@@ -146,6 +146,7 @@ if __name__ == '__main__':
                 plot_params['label'] = group.strip()
 
             line = None
+            print(jitter_incr)
             jittered_x = [x + jitter_incr for x in data[group]['x']]
             line, = axes[index].plot(jittered_x, data[group][y], **plot_params)
             if use_jitter:

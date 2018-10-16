@@ -162,26 +162,31 @@ if __name__ == '__main__':
         y = np.array(y_data[group])
         value = np.array(value_data[group])
 
-        orig_cmap = matplotlib.cm.viridis_r
-        shifted_cmap = shiftedColorMap(orig_cmap, start=0.2, midpoint=0.2, name='my_shifted')
-        line = plt.scatter(x,y, cmap='my_shifted', c=value, s=200, marker=next(markers), label=group)
+        #orig_cmap = matplotlib.cm.viridis_r
+        orig_cmap = matplotlib.cm.RdYlGn_r
+        shifted_cmap = shiftedColorMap(orig_cmap, start=0.0, midpoint=0.5, name='my_shifted')
+        line = plt.scatter(x,y,c=value, 
+                cmap='my_shifted',
+                s=200, marker=next(markers), label=group,
+                norm=matplotlib.colors.PowerNorm(gamma=0.25))
+                #norm=matplotlib.colors.LogNorm())
         lines.append(line)
 
-    cbar = plt.colorbar(orientation='horizontal')
+    cbar = plt.colorbar(lines[0],orientation='horizontal', norm=matplotlib.colors.PowerNorm(gamma=0.2), spacing='uniform')
+    #cbar.ax.set_xscale('log')
     cbar.ax.set_xlabel(args.value_label, rotation=0, labelpad=15)
-    #cbar.ax.set_xlim([0,1])
+    cbar.set_ticks([0, 0.001 ,0.01,0.1,1])
     plt.clim(0,1)
+    #cbar.ax.get_xaxis().set_major_formatter(tick.ScalarFormatter())
 
 
     #yticks = [int(t) for t in list(np.logspace(math.log(ymin,10), math.log(ymax,10), num=5))]
     plt.xlabel(args.x_label)
     plt.ylabel(args.y_label)
-    #plt.yscale('log')
+    plt.yscale('log')
     #plt.yticks(yticks, yticks)
-    #plt.yticks([5, 10, 20, 40, 80, 160], [5, 10, 20, 40, 80, 160])
+    plt.yticks([5, 10, 20, 40, 80, 160], [5, 10, 20, 40, 80, 160])
     #plt.ylim(2.5)
-    #plt.get_xaxis().set_major_formatter(tick.ScalarFormatter())
-    #plt.get_xaxis().set_minor_formatter(tick.NullFormatter())
 
     legend_pos = 'best'
     if args.legend_pos:
