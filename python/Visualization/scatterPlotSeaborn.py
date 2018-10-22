@@ -12,7 +12,7 @@ import math
 from matplotlib import rc
 rc('text', usetex=True)
 
-plt.style.use('seaborn')
+#plt.style.use('seaborn')
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -104,8 +104,8 @@ if __name__ == '__main__':
     if len(y_labels) > 1:
         axes.append(ax.twinx())
 
-    ax.axhline(1, ls='--', c='grey', label='200')
-    ax.text(0.90, 0.93, "1.000")
+    #ax.axhline(1, ls='--', c='grey', label='200')
+    #ax.text(0.90, 0.93, "1.000")
 
     lines = []
     labels = []
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     jitter_incr = 0
     if use_jitter:
         jitter_incr = -0.02
-    for group in data:
+    for group in sorted(data.keys()):
         index = 0
 
         plot_params ={}
@@ -207,7 +207,7 @@ if __name__ == '__main__':
         else:
             yticks = list(np.linspace(minys[i], maxys[i], 6))
 
-
+        #axes[i].get_yaxis().set_ticks([3,5,10,20,40,80,160])
         axes[i].get_yaxis().set_major_formatter(tick.ScalarFormatter())
         axes[i].get_yaxis().set_minor_formatter(tick.NullFormatter())
 
@@ -219,6 +219,9 @@ if __name__ == '__main__':
     if args.legend_pos:
         legend_pos = int(args.legend_pos[0])
         axes[0].legend(lines, labels, bbox_to_anchor=(1,0.5), loc='center left', frameon=True)
+
+    axes[0].set_facecolor('white')
+    axes[0].grid(True)
 
     if not args.fig_name:
         plt.tight_layout()

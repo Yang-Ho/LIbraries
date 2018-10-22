@@ -12,7 +12,7 @@ import math
 from matplotlib import rc
 rc('text', usetex=True)
 
-plt.style.use('seaborn')
+#plt.style.use('seaborn')
 
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     '''
@@ -151,12 +151,15 @@ if __name__ == '__main__':
     print("x:",header[x_axis])
     print("y:",header[y_axis].strip())
     print("value:",header[value_index].strip())
+    print(x_data)
+    print(y_data)
+    print(value_data)
 
     markers = itertools.cycle(('o', 'v', 'P', '*', 'X', 'D', '<', '>', 'h', '^'))
 
     lines = []
     # "scatterplot"
-    for group in x_data: 
+    for group in sorted(x_data.keys()): 
         print(group)
         x = np.array(x_data[group])
         y = np.array(y_data[group])
@@ -166,17 +169,20 @@ if __name__ == '__main__':
         orig_cmap = matplotlib.cm.RdYlGn_r
         shifted_cmap = shiftedColorMap(orig_cmap, start=0.0, midpoint=0.5, name='my_shifted')
         line = plt.scatter(x,y,c=value, 
-                cmap='my_shifted',
-                s=200, marker=next(markers), label=group,
+                #cmap='my_shifted',
+                cmap=orig_cmap,
+                s=100, marker=next(markers), label=group,
                 norm=matplotlib.colors.PowerNorm(gamma=0.25))
                 #norm=matplotlib.colors.LogNorm())
+        plt.clim(0,1)
         lines.append(line)
 
+    #plt.clim(0,1)
     cbar = plt.colorbar(lines[0],orientation='horizontal', norm=matplotlib.colors.PowerNorm(gamma=0.2), spacing='uniform')
+    #cbar = plt.colorbar(lines[0])
     #cbar.ax.set_xscale('log')
     cbar.ax.set_xlabel(args.value_label, rotation=0, labelpad=15)
     cbar.set_ticks([0, 0.001 ,0.01,0.1,1])
-    plt.clim(0,1)
     #cbar.ax.get_xaxis().set_major_formatter(tick.ScalarFormatter())
 
 
@@ -185,13 +191,17 @@ if __name__ == '__main__':
     plt.ylabel(args.y_label)
     plt.yscale('log')
     #plt.yticks(yticks, yticks)
-    plt.yticks([5, 10, 20, 40, 80, 160], [5, 10, 20, 40, 80, 160])
+    #plt.yticks([5, 10, 20, 40, 80, 160], [5, 10, 20, 40, 80, 160])
     #plt.ylim(2.5)
 
     legend_pos = 'best'
     if args.legend_pos:
         legend_pos = int(args.legend_pos[0])
         plt.legend(bbox_to_anchor=(1,0.5), loc='center left', frameon=True)
+
+    plt.gca().set_facecolor('white')
+    plt.gca().grid(True)
+    plt.gca().get_yaxis().set_major_formatter(tick.ScalarFormatter())
 
     if not args.fig_name:
         plt.tight_layout()
