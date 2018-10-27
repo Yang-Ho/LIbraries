@@ -2,7 +2,7 @@
 import argparse
 import itertools
 import matplotlib
-matplotlib.rcParams.update({'errorbar.capsize': 5, 'lines.linewidth':5})
+matplotlib.rcParams.update({'errorbar.capsize': 5, 'lines.linewidth':2})
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
 import matplotlib.cm as cm
@@ -210,6 +210,8 @@ if __name__ == '__main__':
         #axes[i].get_yaxis().set_ticks([3,5,10,20,40,80,160])
         axes[i].get_yaxis().set_major_formatter(tick.ScalarFormatter())
         axes[i].get_yaxis().set_minor_formatter(tick.NullFormatter())
+        axes[i].get_xaxis().set_major_formatter(tick.ScalarFormatter())
+        axes[i].get_xaxis().set_minor_formatter(tick.NullFormatter())
 
         if i > 0:
             axes[i].grid(b=False)
@@ -223,6 +225,7 @@ if __name__ == '__main__':
     axes[0].set_facecolor('white')
     axes[0].grid(True)
 
+    plt.yticks([1.25, 2.5, 5, 10, 20, 40, 80, 160], [1.25, 2.5, 5, 10, 20, 40, 80, 160])
     if not args.fig_name:
         plt.tight_layout()
         plt.show()

@@ -113,9 +113,10 @@ if __name__ == '__main__':
                 line = line.split(',')
                 x_value = float(line[x_axis])
                 y_value = float(line[y_axis])
-                if 'X' in line[value_index]:
+                if 'X' in line[value_index] or 'x' in line[value_index]:
                     #value = np.nan
                     value = 0
+                    continue
                 else:
                     value = float(line[value_index])
                     if value > val_max:
@@ -159,6 +160,8 @@ if __name__ == '__main__':
 
     lines = []
     # "scatterplot"
+    #plt.yscale('log')
+    plt.xscale('log')
     for group in sorted(x_data.keys()): 
         print(group)
         x = np.array(x_data[group])
@@ -171,18 +174,18 @@ if __name__ == '__main__':
         line = plt.scatter(x,y,c=value, 
                 #cmap='my_shifted',
                 cmap=orig_cmap,
-                s=100, marker=next(markers), label=group,
-                norm=matplotlib.colors.PowerNorm(gamma=0.25))
+                s=100, marker=next(markers), label=group)
+                #norm=matplotlib.colors.PowerNorm(gamma=0.25))
                 #norm=matplotlib.colors.LogNorm())
         plt.clim(0,1)
         lines.append(line)
 
     #plt.clim(0,1)
-    cbar = plt.colorbar(lines[0],orientation='horizontal', norm=matplotlib.colors.PowerNorm(gamma=0.2), spacing='uniform')
+    cbar = plt.colorbar(lines[0],orientation='horizontal', norm=matplotlib.colors.PowerNorm(gamma=0.25), spacing='uniform')
     #cbar = plt.colorbar(lines[0])
-    #cbar.ax.set_xscale('log')
     cbar.ax.set_xlabel(args.value_label, rotation=0, labelpad=15)
-    cbar.set_ticks([0, 0.001 ,0.01,0.1,1])
+    #cbar.set_ticks([0, 0.001 ,0.01,0.1,1])
+    cbar.set_ticks([0, 0.5, 1])
     #cbar.ax.get_xaxis().set_major_formatter(tick.ScalarFormatter())
 
 
@@ -190,8 +193,9 @@ if __name__ == '__main__':
     plt.xlabel(args.x_label)
     plt.ylabel(args.y_label)
     plt.yscale('log')
+    #plt.yticks([1.25,2.5,5, 10, 20, 40, 80, 160], [1.25,2.5,5, 10, 20, 40, 80, 160])
+    plt.yticks([200,400,800], [200,400,800])
     #plt.yticks(yticks, yticks)
-    #plt.yticks([5, 10, 20, 40, 80, 160], [5, 10, 20, 40, 80, 160])
     #plt.ylim(2.5)
 
     legend_pos = 'best'
@@ -200,8 +204,10 @@ if __name__ == '__main__':
         plt.legend(bbox_to_anchor=(1,0.5), loc='center left', frameon=True)
 
     plt.gca().set_facecolor('white')
-    plt.gca().grid(True)
     plt.gca().get_yaxis().set_major_formatter(tick.ScalarFormatter())
+    plt.gca().get_yaxis().set_minor_formatter(tick.NullFormatter())
+    plt.gca().grid(True)
+    plt.gca().set_axisbelow(True)
 
     if not args.fig_name:
         plt.tight_layout()
