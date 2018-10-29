@@ -5,15 +5,20 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
 import matplotlib.cm as cm
-#import seaborn as sns
 import numpy as np
 import math
 
 from matplotlib import rc
+# Sets 'global' parameters such as font, fontsize, etc.
 rc('text', usetex=True)
+rc('font', size=24, family='Times New Roman', weight='bold')
+rc('axes', labelsize=26)
+rc('xtick', labelsize=22)
+rc('ytick', labelsize=22)
+rc('legend', fontsize=22)
 
-#plt.style.use('seaborn')
 
+# This function was pulled from an online source (that I cannot find again at the moment)
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     '''
     Function to offset the "center" of a colormap. Useful for
@@ -72,15 +77,22 @@ def parse_arguments():
     parser.add_argument("x_axis", help="Which column to use as x-axis")
     parser.add_argument("y_axis", help="Which column to use as y-axis")
     parser.add_argument("value", help="Which column to use as value")
-    parser.add_argument("x_label", help="What to use as label for x-axis")
-    parser.add_argument("y_label", help="What to use as label for y-axis")
-    parser.add_argument("value_label", help="Label of value")
+    parser.add_argument("x_title", help="What to use as title for x-axis")
+    parser.add_argument("y_title", help="What to use as title for y-axis")
+    parser.add_argument("value_title", help="title of value")
     parser.add_argument("title", help="What to use as chart title")
-    parser.add_argument("--xlog", help="Use log scale for x-axis", action='store_true')
-    parser.add_argument("--ylog", help="Use log scale for y-axis", action='store_true')
-    parser.add_argument("--save_fig", nargs=1, dest='fig_name', help="Use log scale for y-axis")
-    parser.add_argument("--legend_pos", nargs=1, dest='legend_pos', help="Postion to place the legend")
-    parser.add_argument("--group", nargs=1, dest='group', help="Which column to use to group the data")
+    parser.add_argument("--xlog", action='store_true', help="Flag to enable log scale for x-axis")
+    parser.add_argument("--ylog", action='store_true', help="Flag to enable log scale for y-axis")
+    parser.add_argument("--legend", action='store_true', help="Flag to display legend")
+    parser.add_argument("--save_fig", nargs=1, dest='fig_name', help="Save the figure to FIG_NAME (format is pdf)")
+    parser.add_argument("--group", nargs=1, dest='group', help="Which column to use to group/categorize the data")
+    parser.add_argument("--yticks", nargs=1, dest='y_tick_pos', help="Positions of ticks on y-axis. Format is a comma delimited list. e.g. 1,2,3")
+    parser.add_argument("--ylabels", nargs=1, dest='y_tick_labels', help="Labels of ticks on y-axis. Format is a comma delimited list. e.g. 1,2,3")
+    parser.add_argument("--xticks", nargs=1, dest='x_tick_pos', help="Positions of ticks on x-axis. Format is a comma delimited list. e.g. 1,2,3")
+    parser.add_argument("--xlabels", nargs=1, dest='x_tick_labels', help="Labels of ticks on x-axis. Format is a comma delimited list. e.g. 1,2,3")
+    parser.add_argument("--valueticks", nargs=1, dest='value_tick_pos', help="Positions of ticks on the colorbar. Format is a comma delimited list. e.g. 1,2,3")
+    parser.add_argument("--valuelabels", nargs=1, dest='value_tick_labels', help="Labels of ticks on the colorbar. Format is a comma delimited list. e.g. 1,2,3")
+    parser.add_argument("--gamma", nargs='?', dest='gamma', default=1, const=1, help="Gamma parameter to change the 'scale' of the colormap (warning: this is very 'hacky'). Default value is 1 (which produces a linear color scale) and must be > 0.")
 
     return parser.parse_args()
 
@@ -99,12 +111,31 @@ if __name__ == '__main__':
         y_data = {'default' : []}
         value_data = {'default' : []}
 
-    val_min = 1
-    val_max = 0
-    ymin = 1000
-    xmin = 1000
-    ymax = 0
-    xmax = 0
+    # Set tick positions and labels
+    if args.y_tick_pos:
+        y_tick_pos = [float(s) for s in args.y_tick_pos[0].split(',')]
+    else:
+        y_tick_pos = None
+    if args.y_tick_labels:
+        y_tick_labels = [s for s in args.y_tick_labels[0].split(',')]
+    else:
+        y_tick_labels = None
+    if args.x_tick_pos:
+        x_tick_pos = [float(s) for s in args.x_tick_pos[0].split(',')]
+    else:
+        x_tick_pos = None
+    if args.x_tick_labels:
+        x_tick_labels = [s for s in args.x_tick_labels[0].split(',')]
+    else:
+        x_tick_labels = None
+    if args.value_tick_pos:
+        value_tick_pos = [float(s) for s in args.value_tick_pos[0].split(',')]
+    else:
+        value_tick_pos = None
+    if args.value_tick_labels:
+        value_tick_labels = [s for s in args.value_tick_labels[0].split(',')]
+    else:
+        value_tick_labels = None
 
     header = None 
     with open(args.data_file) as input_file:
@@ -119,19 +150,6 @@ if __name__ == '__main__':
                     continue
                 else:
                     value = float(line[value_index])
-                    if value > val_max:
-                        val_max = value
-                    if value < val_min:
-                        val_min = value
-
-                if x_value > xmax:
-                    xmax = x_value
-                if x_value < xmin:
-                    xmin = x_value
-                if y_value > ymax:
-                    ymax = y_value
-                if y_value < ymin:
-                    ymin = y_value
 
                 if args.group:
                     group = line[int(args.group[0])].strip()
@@ -159,56 +177,51 @@ if __name__ == '__main__':
     markers = itertools.cycle(('o', 'v', 'P', '*', 'X', 'D', '<', '>', 'h', '^'))
 
     lines = []
-    # "scatterplot"
-    #plt.yscale('log')
-    plt.xscale('log')
+    plt.figure(figsize=(6,8), dpi=100) # figsize sets the size to WxH where W and H are inches
+    if args.ylog:
+        plt.yscale('log')
+    if args.xlog:
+        plt.xscale('log')
+
+    # Plot the data
     for group in sorted(x_data.keys()): 
         print(group)
         x = np.array(x_data[group])
         y = np.array(y_data[group])
         value = np.array(value_data[group])
 
-        #orig_cmap = matplotlib.cm.viridis_r
         orig_cmap = matplotlib.cm.RdYlGn_r
         shifted_cmap = shiftedColorMap(orig_cmap, start=0.0, midpoint=0.5, name='my_shifted')
         line = plt.scatter(x,y,c=value, 
-                #cmap='my_shifted',
                 cmap=orig_cmap,
-                s=100, marker=next(markers), label=group)
-                #norm=matplotlib.colors.PowerNorm(gamma=0.25))
-                #norm=matplotlib.colors.LogNorm())
+                s=200, marker=next(markers), label=group, norm=matplotlib.colors.PowerNorm(gamma=float(args.gamma)))
         plt.clim(0,1)
         lines.append(line)
 
-    #plt.clim(0,1)
-    cbar = plt.colorbar(lines[0],orientation='horizontal', norm=matplotlib.colors.PowerNorm(gamma=0.25), spacing='uniform')
-    #cbar = plt.colorbar(lines[0])
-    cbar.ax.set_xlabel(args.value_label, rotation=0, labelpad=15)
-    #cbar.set_ticks([0, 0.001 ,0.01,0.1,1])
-    cbar.set_ticks([0, 0.5, 1])
-    #cbar.ax.get_xaxis().set_major_formatter(tick.ScalarFormatter())
+    cbar = plt.colorbar(lines[0],orientation='horizontal', norm=matplotlib.colors.PowerNorm(gamma=0.25), spacing='uniform', pad=0.2)
+    cbar.ax.set_xlabel(args.value_title, rotation=0, labelpad=15)
+    if value_tick_pos:
+        cbar.set_ticks(value_tick_pos)
+    if value_tick_labels:
+        cbar.set_ticklabels(value_tick_labels)
 
+    # Set visuals
+    plt.xlabel(args.x_title)
+    plt.ylabel(args.y_title)
+    if args.y_tick_labels:
+        plt.yticks(y_tick_pos, y_tick_labels)
+    if args.x_tick_labels:
+        plt.xticks(x_tick_pos, x_tick_labels)
+    plt.gca().get_yaxis().set_minor_formatter(tick.NullFormatter())
 
-    #yticks = [int(t) for t in list(np.logspace(math.log(ymin,10), math.log(ymax,10), num=5))]
-    plt.xlabel(args.x_label)
-    plt.ylabel(args.y_label)
-    plt.yscale('log')
-    #plt.yticks([1.25,2.5,5, 10, 20, 40, 80, 160], [1.25,2.5,5, 10, 20, 40, 80, 160])
-    plt.yticks([200,400,800], [200,400,800])
-    #plt.yticks(yticks, yticks)
-    #plt.ylim(2.5)
-
-    legend_pos = 'best'
-    if args.legend_pos:
-        legend_pos = int(args.legend_pos[0])
+    if args.legend:
         plt.legend(bbox_to_anchor=(1,0.5), loc='center left', frameon=True)
 
     plt.gca().set_facecolor('white')
-    plt.gca().get_yaxis().set_major_formatter(tick.ScalarFormatter())
-    plt.gca().get_yaxis().set_minor_formatter(tick.NullFormatter())
     plt.gca().grid(True)
     plt.gca().set_axisbelow(True)
 
+    # Display or save chart (NOTE: The default view of displaying the chart is different than how it is saved)
     if not args.fig_name:
         plt.tight_layout()
         plt.show()
